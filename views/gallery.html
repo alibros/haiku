@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Haiku Gallery</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="background-elements">
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="orb orb3"></div>
+  </div>
+
+  <header>
+    <div class="logo-container">
+      <div class="logo-icon">俳</div>
+      <h1 class="page-title">Haiku Gallery</h1>
+    </div>
+    <div class="nav-links">
+      <a href="/" class="nav-link">Back to Camera</a>
+      <a href="/ai-slideshow" class="nav-link special-link">AI Slideshow</a>
+    </div>
+  </header>
+  
+  <div class="container">
+    <div id="gallery" class="gallery-grid"></div>
+
+    <div class="loading-indicator" id="gallery-loading">
+      <div class="spinner"></div>
+      <div class="loading-text">Loading gallery...</div>
+    </div>
+    
+    <footer>
+      <p class="footer-text">Explore the fusion of camera moments and AI imagination</p>
+    </footer>
+  </div>
+  <script src="/js/gallery.js"></script>
+</body>
+</html>

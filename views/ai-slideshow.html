@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Haiku Slideshow</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/ai-slideshow.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+</head>
+<body class="slideshow-body">
+  <div class="slideshow-container">
+    <!-- Background images container (two divs for crossfade) -->
+    <div id="background-container">
+      <div class="slide-bg current"></div>
+      <div class="slide-bg next"></div>
+    </div>
+    
+    <!-- Haiku text container -->
+    <div id="haiku-container">
+      <div class="haiku-text"></div>
+    </div>
+    
+    <!-- Controls -->
+    <div class="slideshow-controls">
+      <button id="prev-button" class="control-button">
+        <span class="control-icon">&#10094;</span>
+      </button>
+      <button id="pause-button" class="control-button">
+        <span class="control-icon pause-icon">❚❚</span>
+        <span class="control-icon play-icon hidden">▶</span>
+      </button>
+      <button id="next-button" class="control-button">
+        <span class="control-icon">&#10095;</span>
+      </button>
+      <a href="/" class="exit-button">✕</a>
+    </div>
+    
+    <!-- Loading indicator -->
+    <div id="slideshow-loading" class="slideshow-loading">
+      <div class="spinner"></div>
+      <div class="loading-text">Loading images...</div>
+    </div>
+    
+    <!-- No content message -->
+    <div id="no-content" class="no-content hidden">
+      <p>No haiku images available yet.</p>
+      <p>Go back and create some!</p>
+      <a href="/" class="btn">Back to Home</a>
+    </div>
+  </div>
+  <script src="/js/ai-slideshow.js"></script>
+</body>
+</html> 

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Haiku Slideshow</title>
+    <link rel="stylesheet" href="/css/slideshow.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+</head>
+<body>
+    <div class="slideshow-container">
+        <!-- Background container for images -->
+        <div id="background-container" class="background-container"></div>
+
+        <!-- Haiku text container -->
+        <div id="haiku-container" class="haiku-container"></div>
+
+        <!-- Controls -->
+        <div class="slideshow-controls">
+            <button id="prev-button" class="control-button prev-button">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button id="play-pause-button" class="control-button play-pause-button">
+                <i class="fas fa-pause"></i>
+            </button>
+            <button id="next-button" class="control-button next-button">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+
+        <!-- Exit button -->
+        <a href="/" class="exit-button">
+            <i class="fas fa-times"></i>
+        </a>
+
+        <!-- Loading indicator -->
+        <div class="slideshow-loading">
+            <div class="spinner"></div>
+            <div class="loading-text">Loading haikus...</div>
+        </div>
+
+        <!-- No content message -->
+        <div class="no-content hidden">
+            <div class="no-content-message">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>No haikus available. Please create some first.</p>
+                <a href="/" class="back-button">Back to Home</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/slideshow.js"></script>
+</body>
+</html> 

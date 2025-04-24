@@ -1,0 +1,248 @@
+/* AI Slideshow specific styles */
+.slide-bg {
+    /* Ensure background properties are set */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    
+    /* Base transition for opacity */
+    transition: opacity 1.5s ease;
+    
+    /* Ensure it occupies space and is visible initially */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0; /* Start hidden */
+    will-change: opacity, transform; /* Optimize transitions */
+}
+
+/* Explicitly set opacity for the current visible slide */
+.slide-bg.current {
+    opacity: 1;
+    z-index: 2;
+}
+
+.slide-bg.next {
+    /* Next slide starts hidden, ready for fade-in */
+    opacity: 0;
+    z-index: 1;
+}
+
+.slide-bg.fade-in {
+    /* Trigger fade-in animation (defined in styles.css or below) */
+    animation: fadeIn 1.5s forwards;
+}
+
+.slide-bg.fade-out {
+    /* Trigger fade-out animation (defined in styles.css or below) */
+    animation: fadeOut 1.5s forwards;
+}
+
+/* Add fade keyframes here if not in styles.css */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+.slide-bg.animate {
+    animation: fluidPanAndZoom 15s ease-out forwards;
+}
+
+@keyframes fluidPanAndZoom {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.05); }
+}
+
+/* Enhanced gradient overlay */
+#background-container::after {
+    background: linear-gradient(0deg, 
+        rgba(0,0,0,0.8) 0%, 
+        rgba(0,0,0,0.5) 50%,
+        rgba(0,0,0,0.3) 100%);
+}
+
+/* Haiku text container */
+#haiku-container {
+    position: absolute;
+    bottom: 10%; /* Lower position */
+    right: 5%;
+    width: 45%; /* Slightly wider */
+    max-width: 500px; /* Max width for readability */
+    padding: 1.5rem;
+    text-align: right;
+    z-index: 11; /* Ensure it's above background/overlay */
+    pointer-events: none; /* Prevent interfering with controls */
+}
+
+/* Animated haiku text styling */
+.haiku-text {
+    font-size: 2.2rem; /* Slightly smaller for bottom position */
+    line-height: 1.6;
+    text-shadow: 1px 1px 4px rgba(0,0,0,0.8);
+    font-family: 'Cormorant Garamond', serif;
+    color: rgba(255, 255, 255, 0.474); /* Slightly less bright white */
+}
+
+.haiku-line {
+    margin-bottom: 0.8rem; /* More space between lines */
+}
+
+/* Base state for words */
+.haiku-word {
+    display: inline-block;
+    opacity: 0;
+    transition: opacity 2s ease; /* Increased duration for slower fade-in */
+    margin-right: 0.2em; /* Add spacing */
+}
+
+/* State when word becomes visible */
+.haiku-word.visible {
+    opacity: 1;
+}
+
+/* Fadeout animation */
+.haiku-word.fade-out-word {
+    opacity: 0;
+    transition: opacity 0.8s ease; /* Keep fade-out relatively quick */
+}
+
+/* Controls container positioning */
+.slideshow-controls {
+    position: absolute;
+    bottom: 3%; /* Slightly adjusted from original 5% */
+    left: 3%;  /* Slightly adjusted from original 5% */
+    display: flex;
+    gap: 0.8rem;
+    z-index: 11; /* Ensure above background/overlay */
+}
+
+/* Enhanced controls */
+.control-button {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(4px); /* Slightly reduce blur */
+    width: 28px; /* Smaller size */
+    height: 28px; /* Smaller size */
+    border-radius: 50%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    cursor: pointer; 
+    color: white; 
+    font-size: 0.75rem; /* Smaller icon size */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2); /* Even softer shadow */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.2s ease; /* Slightly faster transition */
+}
+
+.control-button:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1); /* Use scale instead of translateY */
+}
+
+/* Style for icons inside buttons */
+.control-icon {
+    line-height: 1; 
+}
+
+.exit-button {
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(4px); /* Slightly reduce blur */
+    width: 24px; /* Smaller size */
+    height: 24px; /* Smaller size */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-decoration: none;
+    z-index: 10;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2); /* Even softer shadow */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.2s ease; /* Slightly faster transition */
+    font-size: 0.9rem; /* Smaller icon size */
+    line-height: 1; 
+    padding-bottom: 1px; /* Re-adjust padding */
+}
+
+.exit-button:hover {
+    background: rgba(0, 0, 0, 0.5);
+    transform: rotate(90deg) scale(1.1); /* Add scale on hover */
+}
+
+/* Enhanced loading animation */
+.spinner {
+    width: 50px;
+    height: 50px;
+    border-width: 6px;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+}
+
+/* AI image attribution */
+.image-attribution {
+    position: absolute;
+    bottom: 15px;
+    right: 15px;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.8rem;
+    z-index: 10;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    #haiku-container {
+        width: 60%;
+        bottom: 8%;
+        padding: 1rem;
+    }
+    .haiku-text {
+        font-size: 1.8rem;
+    }
+    
+    .slideshow-controls {
+        gap: 0.5rem; /* Reduce gap slightly */
+    }
+    .control-button {
+        width: 26px;
+        height: 26px;
+        font-size: 0.7rem;
+    }
+    .exit-button {
+        width: 22px;
+        height: 22px;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    #haiku-container {
+        width: 85%;
+        bottom: 15%; /* Move up slightly on small screens above controls */
+        right: 3%;
+    }
+    .haiku-text {
+        font-size: 1.6rem;
+    }
+    
+    .slideshow-controls {
+        bottom: 5%; /* More space from edge on small screens */
+        left: 5%;
+    }
+    .control-button {
+        width: 24px;
+        height: 24px;
+        font-size: 0.65rem;
+    }
+    .exit-button {
+         width: 20px;
+         height: 20px;
+         font-size: 0.7rem;
+    }
+} 

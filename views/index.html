@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Haiku Snapshot</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="background-elements">
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="orb orb3"></div>
+  </div>
+
+  <header>
+    <div class="logo-container">
+      <div class="logo-icon">俳</div>
+      <h1 class="page-title">Haiku Snapshot</h1>
+    </div>
+    <div class="nav-links">
+      <a href="/gallery" class="nav-link">View Gallery</a>
+      <a href="/ai-slideshow" class="nav-link special-link">AI Slideshow</a>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="app-card">
+      <div class="card-section camera-section">
+        <h2 class="section-title">Capture a Moment</h2>
+        
+        <div class="capture-tabs">
+          <button id="camera-tab" class="tab-button active">Camera</button>
+          <button id="upload-tab" class="tab-button">Upload</button>
+        </div>
+        
+        <div class="camera-container" id="camera-view">
+          <!-- Live camera feed -->
+          <video id="video" autoplay></video>
+          
+          <!-- Captured photo preview -->
+          <div id="photo-preview" class="photo-preview hidden">
+            <canvas id="canvas"></canvas>
+            <div class="capture-flash"></div>
+          </div>
+        </div>
+        
+        <!-- Upload container (initially hidden) -->
+        <div class="upload-container hidden" id="upload-view">
+          <div class="upload-area" id="upload-area">
+            <input type="file" id="file-input" accept="image/*" class="file-input" />
+            <div class="upload-icon">📁</div>
+            <p class="upload-text">Drop image here or click to browse</p>
+          </div>
+          <div id="upload-preview" class="upload-preview hidden">
+            <img id="uploaded-image" alt="Uploaded image" />
+            <button id="change-image" class="text-button">Change image</button>
+          </div>
+        </div>
+        
+        <div class="button-container">
+          <!-- Capture button (for camera view) -->
+          <button id="snap" class="primary-button">
+            <span class="button-icon">📸</span>
+            <span class="button-text">Capture Moment</span>
+          </button>
+          
+          <!-- Upload button (for upload view, initially hidden) -->
+          <button id="process-upload" class="primary-button hidden">
+            <span class="button-icon">✨</span>
+            <span class="button-text">Process Image</span>
+          </button>
+          
+          <!-- Reset/capture again button (initially hidden) -->
+          <button id="capture-again" class="secondary-button hidden">
+            <span class="button-icon">🔄</span>
+            <span class="button-text">Capture Again</span>
+          </button>
+        </div>
+        
+        <div class="status-message" id="status-message"></div>
+      </div>
+      
+      <div class="creation-container">
+        <!-- Haiku Section -->
+        <div class="card-section haiku-container">
+          <h2 class="section-title">Your Haiku</h2>
+          
+          <!-- Haiku Loading State -->
+          <div id="haiku-loading" class="loading-indicator loader-haiku">
+            <div class="spinner"></div>
+            <div class="loading-text">Crafting your haiku...</div>
+          </div>
+          
+          <!-- Haiku Output -->
+          <pre id="haiku" class="haiku"></pre>
+        </div>
+        
+        <!-- AI Image Section -->
+        <div id="image-container" class="card-section ai-image-container">
+          <h2 class="section-title">AI Visualization</h2>
+          
+          <!-- Image Loading State -->
+          <div id="image-loading" class="loading-indicator loader-image">
+            <div class="spinner"></div>
+          </div>
+          
+          <img id="ai-image" class="ai-image hidden" alt="AI generated image based on your haiku" />
+        </div>
+      </div>
+    </div>
+    
+    <footer>
+      <p class="footer-text">Take a photo, get a haiku, see it visualized</p>
+      <div class="footer-links">
+        <a href="/gallery" class="gallery-link">Browse Gallery</a>
+        <a href="/ai-slideshow" class="gallery-link">AI Slideshow</a>
+      </div>
+    </footer>
+  </div>
+  <script src="/js/camera.js"></script>
+</body>
+</html>
