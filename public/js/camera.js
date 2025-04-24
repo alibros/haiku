@@ -29,6 +29,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const changeImageButton = document.getElementById('change-image');
   const processUploadButton = document.getElementById('process-upload');
 
+  // Add tab button selections
+  const cameraTab = document.getElementById('camera-tab');
+  const uploadTab = document.getElementById('upload-tab');
+
   let stream = null; 
   let imageStatusInterval = null;
   
@@ -43,29 +47,56 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- Initial Setup --- 
 
-  // Event listeners for initial choice
-  chooseCamera.addEventListener('click', () => {
-    initialChoice.classList.add('hidden');
-    cameraView.classList.remove('hidden');
-    actionButtons.classList.remove('hidden');
-    snapButton.classList.remove('hidden'); // Show capture button
-    processingState.currentMode = 'camera';
-    initCamera(); // Initialize camera only when chosen
-  });
+  chooseCamera.addEventListener('click', () => selectMode('camera'));
+  chooseUpload.addEventListener('click', () => selectMode('upload'));
 
-  chooseUpload.addEventListener('click', () => {
+  // Add event listeners for tabs
+  cameraTab.addEventListener('click', () => setActiveTab('camera'));
+  uploadTab.addEventListener('click', () => setActiveTab('upload'));
+
+  // Function to handle initial mode selection
+  function selectMode(mode) {
     initialChoice.classList.add('hidden');
-    uploadView.classList.remove('hidden');
+    captureTabs.classList.remove('hidden'); // Show tabs
     actionButtons.classList.remove('hidden');
-    // processUploadButton needs to be shown when a file is selected
-    processingState.currentMode = 'upload';
-    setupUploadArea(); // Ensure upload listeners are active
-  });
+    setActiveTab(mode); // Set the active tab and view
+  }
+
+  // Function to set the active tab and view
+  function setActiveTab(mode) {
+    processingState.currentMode = mode;
+    resetContentArea(); // Clear haiku/image when switching modes
+
+    if (mode === 'camera') {
+      cameraTab.classList.add('active');
+      uploadTab.classList.remove('active');
+      cameraView.classList.remove('hidden');
+      uploadView.classList.add('hidden');
+      snapButton.classList.remove('hidden');
+      processUploadButton.classList.add('hidden');
+      captureAgainButton.classList.add('hidden'); // Hide until capture/upload
+      initCamera(); // Initialize camera when switching to this tab
+      statusMessage.textContent = 'Camera ready. Capture a moment!';
+    } else { // mode === 'upload'
+      uploadTab.classList.add('active');
+      cameraTab.classList.remove('active');
+      uploadView.classList.remove('hidden');
+      cameraView.classList.add('hidden');
+      processUploadButton.classList.add('hidden'); // Hide until file selected
+      snapButton.classList.add('hidden');
+      captureAgainButton.classList.add('hidden'); // Hide until file selected
+      stopCamera(); // Stop camera when switching away
+      showUploadArea(); // Make sure the dropzone is visible
+      statusMessage.textContent = 'Select an image or drop one here.';
+    }
+  }
 
   // --- Camera Functions --- 
 
   // Start camera
   async function initCamera() {
+    // Stop existing stream first
+    stopCamera(); 
     try {
       stream = await navigator.mediaDevices.getUserMedia({ 
         video: { facingMode: 'user' }, 
@@ -79,45 +110,24 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (err) {
       console.error("Error accessing camera:", err);
       snapButton.disabled = true;
-      statusMessage.textContent = 'Error accessing camera. Please ensure permissions are granted.';
+      statusMessage.textContent = 'Error accessing camera. Try Upload?';
       alert("Could not access camera. Check permissions and ensure no other app is using it.");
     }
   }
 
   // Take snapshot
   snapButton.addEventListener('click', () => {
-    // Draw image to canvas
     const context = canvas.getContext('2d');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
-    // Show preview, hide video
-    video.classList.add('hidden');
+    photoPreview.src = canvas.toDataURL('image/jpeg');
     photoPreview.classList.remove('hidden');
-    
-    // Add flash effect
-    const flash = photoPreview.querySelector('.capture-flash');
-    flash.classList.add('flash-animation');
-    setTimeout(() => flash.classList.remove('flash-animation'), 500);
-    
-    // Disable snap, enable capture again
-    snapButton.classList.add('hidden');
-    captureAgainButton.classList.remove('hidden');
-    
-    // Send image to server
-    processImage(canvas);
-    stopCamera();
+    stopCamera(); // Stop camera after snapping
+    processImage(canvas); // Process the snapped image
+    toggleCaptureState(true); // Show capture again button
   });
 
   // Capture again / Reset
-  captureAgainButton.addEventListener('click', () => {
-    resetUI();
-    // Re-initialize camera if it was the chosen mode
-    if (processingState.currentMode === 'camera') {
-        initCamera(); 
-    }
-  });
+  captureAgainButton.addEventListener('click', () => resetUI(true)); // Reset but keep mode
 
   // Stop camera stream
   function stopCamera() {
@@ -154,15 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    changeImageButton.addEventListener('click', () => {
-      resetUI(); 
-      // If we reset from upload, show upload view again
-      if (processingState.currentMode === 'upload') {
-         initialChoice.classList.add('hidden');
-         uploadView.classList.remove('hidden');
-         actionButtons.classList.remove('hidden');
-      }
-    });
+    changeImageButton.addEventListener('click', () => resetUI()); // Reset completely
   }
 
   function handleFileSelect(file) {
@@ -170,10 +172,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const reader = new FileReader();
       reader.onload = (e) => {
         uploadedImage.src = e.target.result;
-        uploadArea.classList.add('hidden');
-        uploadPreview.classList.remove('hidden');
-        processUploadButton.classList.remove('hidden');
-        captureAgainButton.classList.remove('hidden'); // Use this as the 'change' button
+        uploadArea.classList.add('hidden'); // Hide drop zone
+        uploadPreview.classList.remove('hidden'); // Show preview
+        processUploadButton.classList.remove('hidden'); // Show process button
+        captureAgainButton.classList.add('hidden'); // Ensure capture again is hidden
         statusMessage.textContent = 'Image ready to process.';
       }
       reader.readAsDataURL(file);
@@ -185,8 +187,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   processUploadButton.addEventListener('click', () => {
       processImage(uploadedImage);
-      processUploadButton.classList.add('hidden');
-      changeImageButton.classList.add('hidden'); // Hide change button during processing
+      toggleCaptureState(true); // Hide process, show capture again
+      // processUploadButton.classList.add('hidden'); // This is handled by toggleCaptureState
+      // captureAgainButton.classList.remove('hidden'); // This is handled by toggleCaptureState
   });
   
   // --- Common Functions --- 
@@ -336,44 +339,69 @@ document.addEventListener('DOMContentLoaded', () => {
     imageLoading.classList.remove('active');
   }
 
-  // Reset the entire UI to initial state or chosen mode
-  function resetUI() {
+  // Reset the entire UI
+  function resetUI(keepMode = false) {
     stopCamera();
     resetContentArea();
-    
-    // Hide everything except the initial choice if no mode selected yet
-    cameraView.classList.add('hidden');
-    uploadView.classList.add('hidden');
-    actionButtons.classList.add('hidden');
-    snapButton.classList.add('hidden');
-    processUploadButton.classList.add('hidden');
-    captureAgainButton.classList.add('hidden');
+    toggleCaptureState(false); // Reset button visibility first
+
+    // Hide specific views and elements initially
     photoPreview.classList.add('hidden');
     uploadPreview.classList.add('hidden');
-    uploadArea.classList.remove('hidden'); // Show upload area if resetting upload view
+    // Button visibility is handled by toggleCaptureState and setActiveTab/showUploadArea
 
-    statusMessage.textContent = '';
-
-    // If a mode was previously chosen, go back to that mode's view
-    if (processingState.currentMode === 'camera') {
-      initialChoice.classList.add('hidden');
-      cameraView.classList.remove('hidden');
-      actionButtons.classList.remove('hidden');
-      snapButton.classList.remove('hidden');
-    } else if (processingState.currentMode === 'upload') {
-      initialChoice.classList.add('hidden');
-      uploadView.classList.remove('hidden');
-      actionButtons.classList.remove('hidden');
-      // Don't show process button until file selected
-    } else {
-      // If no mode set, go back to initial choice
-      initialChoice.classList.remove('hidden');
+    // If resetting back to a chosen mode (keepMode = true)
+    if (keepMode && processingState.currentMode) {
+        initialChoice.classList.add('hidden');
+        captureTabs.classList.remove('hidden');
+        actionButtons.classList.remove('hidden');
+        setActiveTab(processingState.currentMode); // This will show the correct view and initial button
+        if (processingState.currentMode === 'upload') {
+           showUploadArea(); // Ensure upload area is reset correctly
+        }
+    }
+    // If resetting completely or no mode chosen yet
+    else {
+        processingState.currentMode = null; // Clear mode
+        initialChoice.classList.remove('hidden');
+        captureTabs.classList.add('hidden');
+        actionButtons.classList.add('hidden');
+        cameraView.classList.add('hidden');
+        uploadView.classList.add('hidden');
+        statusMessage.textContent = '';
     }
   }
+  
+  // Toggle Capture/Processing State Button Visibility
+  function toggleCaptureState(isCapturedOrUploaded) {
+      captureAgainButton.classList.toggle('hidden', !isCapturedOrUploaded);
 
-  // Initial state setup - Do not start camera automatically
-  // initCamera(); // REMOVED - Camera starts only on button click
-  // setupUploadArea(); // Setup upload listeners regardless
+      if (processingState.currentMode === 'camera') {
+          snapButton.classList.toggle('hidden', isCapturedOrUploaded);
+          processUploadButton.classList.add('hidden'); // Always hide process in camera mode
+      } else if (processingState.currentMode === 'upload') {
+          // Show process button ONLY if not captured/uploaded AND a file is selected (preview visible)
+          const showProcess = !isCapturedOrUploaded && !uploadPreview.classList.contains('hidden');
+          processUploadButton.classList.toggle('hidden', !showProcess);
+          snapButton.classList.add('hidden'); // Always hide snap in upload mode
+      } else {
+          // If no mode selected yet, hide both
+           snapButton.classList.add('hidden');
+           processUploadButton.classList.add('hidden');
+      }
+  }
+
+  // Helper function to show upload area
+  function showUploadArea() {
+      uploadArea.classList.remove('hidden');
+      uploadPreview.classList.add('hidden');
+      uploadedImage.src = ''; // Clear preview
+      processUploadButton.classList.add('hidden');
+      captureAgainButton.classList.add('hidden');
+  }
+
+  // Initial state setup
+  setupUploadArea(); // Setup upload listeners always
   resetUI(); // Start in the initial choice state
 
 });

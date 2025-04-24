@@ -121,6 +121,7 @@ async function generateImage(taskId) {
       model: "gpt-image-1",
       prompt: task.imageBasePrompt,
       n: 1,
+      quality: "medium",
       size: "1024x1024"
     });
     

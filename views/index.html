@@ -30,7 +30,7 @@
   <div class="container">
     <div class="app-card">
       <div class="card-section camera-section">
-        <h2 class="section-title">Create Your Haiku</h2>
+        <h2 class="section-title">Add an Image</h2>
         
         <!-- Initial Choice Section -->
         <div id="initial-choice" class="initial-choice">
@@ -45,9 +45,9 @@
             </div>
         </div>
 
-        <!-- Hide capture tabs initially -->
+        <!-- Show capture tabs *after* initial choice -->
         <div class="capture-tabs hidden" id="capture-tabs">
-          <button id="camera-tab" class="tab-button active">Camera</button>
+          <button id="camera-tab" class="tab-button">Camera</button> 
           <button id="upload-tab" class="tab-button">Upload</button>
         </div>
         
@@ -110,7 +110,7 @@
         
         <!-- AI Image Section -->
         <div id="image-container" class="card-section ai-image-container">
-          <h2 class="section-title">AI Visualization</h2>
+          <h2 class="section-title"> AI Interpretation</h2>
           <div id="image-loading" class="loading-indicator loader-image">
             <div class="spinner"></div>
           </div>
