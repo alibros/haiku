@@ -117,13 +117,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Take snapshot
   snapButton.addEventListener('click', () => {
+    // Draw image to canvas
     const context = canvas.getContext('2d');
+    canvas.width = video.videoWidth; // Use actual video dimensions
+    canvas.height = video.videoHeight; // Use actual video dimensions
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    photoPreview.src = canvas.toDataURL('image/jpeg');
-    photoPreview.classList.remove('hidden');
-    stopCamera(); // Stop camera after snapping
-    processImage(canvas); // Process the snapped image
-    toggleCaptureState(true); // Show capture again button
+    
+    // Hide video, show preview container
+    video.classList.add('hidden');
+    photoPreview.classList.remove('hidden'); // Show the container div
+    
+    // Add flash effect (flash div is inside photo-preview)
+    const flash = photoPreview.querySelector('.capture-flash');
+    flash.classList.add('flash-animation');
+    setTimeout(() => flash.classList.remove('flash-animation'), 500);
+    
+    stopCamera(); // Stop camera stream
+    processImage(canvas); // Process the canvas
+    toggleCaptureState(true); // Update button visibility
   });
 
   // Capture again / Reset
@@ -345,10 +356,14 @@ document.addEventListener('DOMContentLoaded', () => {
     resetContentArea();
     toggleCaptureState(false); // Reset button visibility first
 
-    // Hide specific views and elements initially
+    // Hide preview containers
     photoPreview.classList.add('hidden');
     uploadPreview.classList.add('hidden');
-    // Button visibility is handled by toggleCaptureState and setActiveTab/showUploadArea
+    
+    // Always show video initially if camera mode is being reset to
+    if (keepMode && processingState.currentMode === 'camera') {
+        video.classList.remove('hidden'); 
+    }
 
     // If resetting back to a chosen mode (keepMode = true)
     if (keepMode && processingState.currentMode) {
