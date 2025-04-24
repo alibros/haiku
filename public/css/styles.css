@@ -384,6 +384,8 @@ header {
   flex: 1;
   min-height: 150px;
   padding: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .haiku-container .section-title {
@@ -391,8 +393,7 @@ header {
 }
 
 .haiku {
-  width: auto;
-  max-width: 98%;
+  width: 95%;
   box-sizing: border-box;
   padding: 0.8rem 1.2rem;
   font-size: 1rem;
@@ -735,7 +736,7 @@ footer {
   .haiku {
     font-size: 1rem;
     padding: 1rem 1.5rem;
-    max-width: 95%;
+    width: 90%;
   }
   
   .page-title {
