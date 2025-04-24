@@ -30,18 +30,30 @@
   <div class="container">
     <div class="app-card">
       <div class="card-section camera-section">
-        <h2 class="section-title">Capture a Moment</h2>
+        <h2 class="section-title">Create Your Haiku</h2>
         
-        <div class="capture-tabs">
+        <!-- Initial Choice Section -->
+        <div id="initial-choice" class="initial-choice">
+            <p>Choose your image source:</p>
+            <div class="choice-buttons">
+                <button id="choose-camera" class="primary-button choice-button">
+                    <span class="button-icon">📷</span> Use Camera
+                </button>
+                <button id="choose-upload" class="secondary-button choice-button">
+                    <span class="button-icon">📁</span> Upload Image
+                </button>
+            </div>
+        </div>
+
+        <!-- Hide capture tabs initially -->
+        <div class="capture-tabs hidden" id="capture-tabs">
           <button id="camera-tab" class="tab-button active">Camera</button>
           <button id="upload-tab" class="tab-button">Upload</button>
         </div>
         
-        <div class="camera-container" id="camera-view">
-          <!-- Live camera feed -->
+        <!-- Camera container (initially hidden) -->
+        <div class="camera-container hidden" id="camera-view">
           <video id="video" autoplay></video>
-          
-          <!-- Captured photo preview -->
           <div id="photo-preview" class="photo-preview hidden">
             <canvas id="canvas"></canvas>
             <div class="capture-flash"></div>
@@ -52,7 +64,7 @@
         <div class="upload-container hidden" id="upload-view">
           <div class="upload-area" id="upload-area">
             <input type="file" id="file-input" accept="image/*" class="file-input" />
-            <div class="upload-icon">📁</div>
+            <div class="upload-icon">📂</div>
             <p class="upload-text">Drop image here or click to browse</p>
           </div>
           <div id="upload-preview" class="upload-preview hidden">
@@ -61,9 +73,10 @@
           </div>
         </div>
         
-        <div class="button-container">
+        <!-- Action Buttons Container (initially hidden) -->
+        <div class="button-container hidden" id="action-buttons">
           <!-- Capture button (for camera view) -->
-          <button id="snap" class="primary-button">
+          <button id="snap" class="primary-button hidden">
             <span class="button-icon">📸</span>
             <span class="button-text">Capture Moment</span>
           </button>
@@ -88,26 +101,19 @@
         <!-- Haiku Section -->
         <div class="card-section haiku-container">
           <h2 class="section-title">Your Haiku</h2>
-          
-          <!-- Haiku Loading State -->
           <div id="haiku-loading" class="loading-indicator loader-haiku">
             <div class="spinner"></div>
             <div class="loading-text">Crafting your haiku...</div>
           </div>
-          
-          <!-- Haiku Output -->
           <pre id="haiku" class="haiku"></pre>
         </div>
         
         <!-- AI Image Section -->
         <div id="image-container" class="card-section ai-image-container">
           <h2 class="section-title">AI Visualization</h2>
-          
-          <!-- Image Loading State -->
           <div id="image-loading" class="loading-indicator loader-image">
             <div class="spinner"></div>
           </div>
-          
           <img id="ai-image" class="ai-image hidden" alt="AI generated image based on your haiku" />
         </div>
       </div>

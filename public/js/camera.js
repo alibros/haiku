@@ -1,410 +1,379 @@
-const video = document.getElementById('video');
-const canvas = document.getElementById('canvas');
-const snapBtn = document.getElementById('snap');
-const captureAgainBtn = document.getElementById('capture-again');
-const photoPreview = document.getElementById('photo-preview');
-const captureFlash = document.querySelector('.capture-flash');
-const haikuPre = document.getElementById('haiku');
-const aiImage = document.getElementById('ai-image');
-const imageContainer = document.getElementById('image-container');
-const statusMessage = document.getElementById('status-message');
-const haikuLoading = document.getElementById('haiku-loading');
-const imageLoading = document.getElementById('image-loading');
-
-// New elements for file upload
-const cameraTab = document.getElementById('camera-tab');
-const uploadTab = document.getElementById('upload-tab');
-const cameraView = document.getElementById('camera-view');
-const uploadView = document.getElementById('upload-view');
-const fileInput = document.getElementById('file-input');
-const uploadArea = document.getElementById('upload-area');
-const uploadedImage = document.getElementById('uploaded-image');
-const uploadPreview = document.getElementById('upload-preview');
-const changeImageBtn = document.getElementById('change-image');
-const processUploadBtn = document.getElementById('process-upload');
-
-// State tracking for process
-let processingState = {
-  captureComplete: false,
-  uploadComplete: false,
-  haikuReady: false,
-  imageGenerating: false,
-  imageReady: false,
-  currentTaskId: null,
-  activeTab: 'camera' // 'camera' or 'upload'
-};
-
-// For polling image status
-let imageStatusInterval = null;
-let mediaStream = null;
-
-// Initialize camera
-function initCamera() {
-  navigator.mediaDevices.getUserMedia({ video: true })
-    .then(stream => {
-      mediaStream = stream;
-      video.srcObject = stream;
-      statusMessage.textContent = 'Camera ready. Click capture to begin.';
-    })
-    .catch(err => {
-      console.error('Camera error:', err);
-      statusMessage.textContent = 'Camera not available. Try using the upload option.';
-      // If camera fails, automatically switch to upload tab
-      setActiveTab('upload');
-    });
-}
-
-// Set active tab (camera or upload)
-function setActiveTab(tabName) {
-  processingState.activeTab = tabName;
+document.addEventListener('DOMContentLoaded', () => {
+  // DOM elements
+  const video = document.getElementById('video');
+  const canvas = document.getElementById('canvas');
+  const snapButton = document.getElementById('snap');
+  const photoPreview = document.getElementById('photo-preview');
+  const haikuPre = document.getElementById('haiku');
+  const haikuLoading = document.getElementById('haiku-loading');
+  const aiImage = document.getElementById('ai-image');
+  const imageContainer = document.getElementById('image-container');
+  const imageLoading = document.getElementById('image-loading');
+  const statusMessage = document.getElementById('status-message');
+  const captureAgainButton = document.getElementById('capture-again');
   
-  // Update tab buttons
-  if (tabName === 'camera') {
-    cameraTab.classList.add('active');
-    uploadTab.classList.remove('active');
-    cameraView.classList.remove('hidden');
-    uploadView.classList.add('hidden');
-    snapBtn.classList.remove('hidden');
-    processUploadBtn.classList.add('hidden');
-    
-    // Make sure camera is initialized
-    if (!video.srcObject && !mediaStream) {
-      initCamera();
-    } else if (mediaStream && !video.srcObject) {
-      video.srcObject = mediaStream;
-    }
-  } else { // upload tab
-    uploadTab.classList.add('active');
-    cameraTab.classList.remove('active');
-    uploadView.classList.remove('hidden');
-    cameraView.classList.add('hidden');
-    processUploadBtn.classList.remove('hidden');
-    snapBtn.classList.add('hidden');
-    
-    // Pause camera if active
-    if (video.srcObject) {
-      video.srcObject = null;
-    }
-  }
-}
-
-// Initialize on page load
-initCamera();
-
-// Tab switching
-cameraTab.addEventListener('click', () => setActiveTab('camera'));
-uploadTab.addEventListener('click', () => setActiveTab('upload'));
-
-// Capture photo button
-snapBtn.addEventListener('click', () => {
-  // Show camera flash effect
-  showCaptureEffect();
+  // New elements for choice and views
+  const initialChoice = document.getElementById('initial-choice');
+  const chooseCamera = document.getElementById('choose-camera');
+  const chooseUpload = document.getElementById('choose-upload');
+  const cameraView = document.getElementById('camera-view');
+  const uploadView = document.getElementById('upload-view');
+  const actionButtons = document.getElementById('action-buttons');
+  const captureTabs = document.getElementById('capture-tabs'); // Might remove later if not needed
   
-  // Freeze the frame by drawing it to canvas
-  freezeFrame();
+  // Upload specific elements
+  const uploadArea = document.getElementById('upload-area');
+  const fileInput = document.getElementById('file-input');
+  const uploadPreview = document.getElementById('upload-preview');
+  const uploadedImage = document.getElementById('uploaded-image');
+  const changeImageButton = document.getElementById('change-image');
+  const processUploadButton = document.getElementById('process-upload');
+
+  let stream = null; 
+  let imageStatusInterval = null;
   
-  // Update UI for capture state
-  toggleCaptureState(true);
-  
-  // Process the captured image
-  processImage(canvas);
-});
-
-// Capture again button
-captureAgainBtn.addEventListener('click', () => {
-  // Reset the entire UI and state
-  resetUI();
-  
-  if (processingState.activeTab === 'camera') {
-    // Switch back to live camera
-    toggleCaptureState(false);
-    
-    // Ensure camera is streaming
-    if (!video.srcObject && mediaStream) {
-      video.srcObject = mediaStream;
-    } else if (!video.srcObject) {
-      initCamera();
-    }
-  } else {
-    // Reset upload view
-    showUploadArea();
-  }
-});
-
-// Process uploaded image
-processUploadBtn.addEventListener('click', () => {
-  if (!processingState.uploadComplete) {
-    statusMessage.textContent = 'Please select an image first.';
-    return;
-  }
-  
-  // Process the uploaded image
-  processImage(uploadedImage);
-  
-  // Hide the upload button and show capture again
-  processUploadBtn.classList.add('hidden');
-  captureAgainBtn.classList.remove('hidden');
-});
-
-// File input change handler
-fileInput.addEventListener('change', handleFileSelect);
-
-// Handle file selection
-function handleFileSelect(e) {
-  const file = e.target.files[0];
-  if (file && file.type.match('image.*')) {
-    displayUploadedImage(file);
-  }
-}
-
-// Display uploaded image
-function displayUploadedImage(file) {
-  const reader = new FileReader();
-  
-  reader.onload = (e) => {
-    uploadedImage.src = e.target.result;
-    showUploadPreview();
-    processingState.uploadComplete = true;
-  };
-  
-  reader.readAsDataURL(file);
-}
-
-// Show upload preview
-function showUploadPreview() {
-  uploadArea.classList.add('hidden');
-  uploadPreview.classList.remove('hidden');
-}
-
-// Show upload area
-function showUploadArea() {
-  uploadArea.classList.remove('hidden');
-  uploadPreview.classList.add('hidden');
-  processingState.uploadComplete = false;
-}
-
-// Change image button
-changeImageBtn.addEventListener('click', (e) => {
-  e.preventDefault();
-  showUploadArea();
-});
-
-// Drag and drop support
-uploadArea.addEventListener('dragover', (e) => {
-  e.preventDefault();
-  uploadArea.classList.add('drag-over');
-});
-
-uploadArea.addEventListener('dragleave', () => {
-  uploadArea.classList.remove('drag-over');
-});
-
-uploadArea.addEventListener('drop', (e) => {
-  e.preventDefault();
-  uploadArea.classList.remove('drag-over');
-  
-  if (e.dataTransfer.files.length) {
-    fileInput.files = e.dataTransfer.files;
-    handleFileSelect({target: {files: e.dataTransfer.files}});
-  }
-});
-
-// Make the upload area clickable
-uploadArea.addEventListener('click', () => {
-  fileInput.click();
-});
-
-// Show camera flash effect
-function showCaptureEffect() {
-  captureFlash.classList.add('flash-animation');
-  
-  // Remove the animation class after it completes
-  setTimeout(() => {
-    captureFlash.classList.remove('flash-animation');
-  }, 500);
-}
-
-// Freeze the frame in the canvas
-function freezeFrame() {
-  // Set canvas dimensions to match video
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  
-  // Draw the current video frame to the canvas
-  canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-}
-
-// Toggle between live camera and captured photo states
-function toggleCaptureState(captured) {
-  if (captured) {
-    // Show photo preview, hide video
-    photoPreview.classList.remove('hidden');
-    snapBtn.classList.add('hidden');
-    captureAgainBtn.classList.remove('hidden');
-  } else {
-    // Show video, hide photo preview
-    photoPreview.classList.add('hidden');
-    snapBtn.classList.remove('hidden');
-    captureAgainBtn.classList.add('hidden');
-  }
-}
-
-// Process the captured or uploaded image
-function processImage(imageSource) {
-  // Reset any previous haiku/image data
-  resetContentArea();
-  
-  // Show haiku loading indicator
-  haikuLoading.classList.add('active');
-  statusMessage.textContent = 'Processing your image...';
-  
-  if (imageSource === canvas) {
-    // For camera capture, use the canvas blob
-    canvas.toBlob(async blob => {
-      await sendImageToServer(blob);
-    });
-  } else {
-    // For uploaded image, fetch it first
-    fetch(uploadedImage.src)
-      .then(res => res.blob())
-      .then(async blob => {
-        await sendImageToServer(blob);
-      })
-      .catch(err => {
-        console.error('Error processing uploaded image:', err);
-        haikuLoading.classList.remove('active');
-        statusMessage.textContent = 'Error processing image. Please try again.';
-      });
-  }
-}
-
-// Send image to server
-async function sendImageToServer(blob) {
-  const form = new FormData();
-  form.append('snapshot', blob, 'snapshot.jpg');
-  
-  try {
-    // Send the image to get a haiku
-    const res = await fetch('/upload', { method: 'POST', body: form });
-    const data = await res.json();
-    
-    if (data.success) {
-      // IMMEDIATELY display the haiku as soon as we have it
-      haikuLoading.classList.remove('active');
-      haikuPre.textContent = data.haiku;
-      haikuPre.classList.add('visible');
-      processingState.haikuReady = true;
-      
-      // Store the task ID for the image generation
-      processingState.currentTaskId = data.taskId;
-      
-      // Show image loading spinner and container
-      imageLoading.classList.add('active');
-      imageContainer.classList.add('visible');
-      statusMessage.textContent = 'Your haiku is ready!';
-      processingState.imageGenerating = true;
-      
-      // Start polling for image status
-      startPollingImageStatus(data.taskId);
-    }
-  } catch (err) {
-    console.error('Error:', err);
-    haikuLoading.classList.remove('active');
-    haikuPre.textContent = 'Error generating haiku';
-    haikuPre.classList.add('visible');
-    statusMessage.textContent = 'Something went wrong. Please try again.';
-  }
-}
-
-// Start polling for image status
-function startPollingImageStatus(taskId) {
-  // Clear any existing interval
-  if (imageStatusInterval) {
-    clearInterval(imageStatusInterval);
-  }
-  
-  // Poll every 2 seconds
-  imageStatusInterval = setInterval(async () => {
-    try {
-      const res = await fetch(`/image-status/${taskId}`);
-      const data = await res.json();
-      
-      if (data.success && data.status === 'completed') {
-        // Image is ready, display it
-        displayGeneratedImage(data.aiImagePath);
-        // Stop polling
-        clearInterval(imageStatusInterval);
-        imageStatusInterval = null;
-      }
-    } catch (err) {
-      console.error('Error checking image status:', err);
-    }
-  }, 2000);
-}
-
-// Display the generated image when it's ready
-function displayGeneratedImage(imagePath) {
-  // When image is ready to display
-  aiImage.onload = () => {
-    imageLoading.classList.remove('active');
-    aiImage.classList.remove('hidden');
-    processingState.imageReady = true;
-    statusMessage.textContent = 'Your haiku snapshot is complete!';
-  };
-  
-  // Set the image source to load it
-  aiImage.src = imagePath;
-}
-
-// Reset the haiku and image content areas only
-function resetContentArea() {
-  // Reset only the content-related state
-  processingState.haikuReady = false;
-  processingState.imageGenerating = false;
-  processingState.imageReady = false;
-  processingState.currentTaskId = null;
-  
-  // Clear any existing polling
-  if (imageStatusInterval) {
-    clearInterval(imageStatusInterval);
-    imageStatusInterval = null;
-  }
-  
-  // Reset content UI elements
-  haikuPre.textContent = '';
-  haikuPre.classList.remove('visible');
-  haikuLoading.classList.remove('active');
-  
-  aiImage.classList.add('hidden');
-  imageContainer.classList.remove('visible');
-  imageLoading.classList.remove('active');
-}
-
-// Reset the entire UI and state
-function resetUI() {
-  // Reset state
-  processingState = {
-    captureComplete: false,
-    uploadComplete: false,
+  // State tracking
+  const processingState = {
     haikuReady: false,
     imageGenerating: false,
     imageReady: false,
     currentTaskId: null,
-    activeTab: processingState.activeTab // preserve active tab
+    currentMode: null // 'camera' or 'upload'
   };
-  
-  // Reset content area
-  resetContentArea();
-  
-  // Reset status message
-  statusMessage.textContent = processingState.activeTab === 'camera' 
-    ? 'Camera ready. Click capture to begin.' 
-    : 'Select an image to begin.';
-    
-  // For upload tab, reset upload state
-  if (processingState.activeTab === 'upload') {
-    showUploadArea();
-    processUploadBtn.classList.remove('hidden');
-    captureAgainBtn.classList.add('hidden');
+
+  // --- Initial Setup --- 
+
+  // Event listeners for initial choice
+  chooseCamera.addEventListener('click', () => {
+    initialChoice.classList.add('hidden');
+    cameraView.classList.remove('hidden');
+    actionButtons.classList.remove('hidden');
+    snapButton.classList.remove('hidden'); // Show capture button
+    processingState.currentMode = 'camera';
+    initCamera(); // Initialize camera only when chosen
+  });
+
+  chooseUpload.addEventListener('click', () => {
+    initialChoice.classList.add('hidden');
+    uploadView.classList.remove('hidden');
+    actionButtons.classList.remove('hidden');
+    // processUploadButton needs to be shown when a file is selected
+    processingState.currentMode = 'upload';
+    setupUploadArea(); // Ensure upload listeners are active
+  });
+
+  // --- Camera Functions --- 
+
+  // Start camera
+  async function initCamera() {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'user' }, 
+        audio: false 
+      });
+      video.srcObject = stream;
+      video.classList.remove('hidden');
+      photoPreview.classList.add('hidden');
+      snapButton.disabled = false;
+      statusMessage.textContent = 'Camera ready. Capture a moment!';
+    } catch (err) {
+      console.error("Error accessing camera:", err);
+      snapButton.disabled = true;
+      statusMessage.textContent = 'Error accessing camera. Please ensure permissions are granted.';
+      alert("Could not access camera. Check permissions and ensure no other app is using it.");
+    }
   }
-}
+
+  // Take snapshot
+  snapButton.addEventListener('click', () => {
+    // Draw image to canvas
+    const context = canvas.getContext('2d');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    // Show preview, hide video
+    video.classList.add('hidden');
+    photoPreview.classList.remove('hidden');
+    
+    // Add flash effect
+    const flash = photoPreview.querySelector('.capture-flash');
+    flash.classList.add('flash-animation');
+    setTimeout(() => flash.classList.remove('flash-animation'), 500);
+    
+    // Disable snap, enable capture again
+    snapButton.classList.add('hidden');
+    captureAgainButton.classList.remove('hidden');
+    
+    // Send image to server
+    processImage(canvas);
+    stopCamera();
+  });
+
+  // Capture again / Reset
+  captureAgainButton.addEventListener('click', () => {
+    resetUI();
+    // Re-initialize camera if it was the chosen mode
+    if (processingState.currentMode === 'camera') {
+        initCamera(); 
+    }
+  });
+
+  // Stop camera stream
+  function stopCamera() {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      stream = null;
+    }
+  }
+
+  // --- Upload Functions --- 
+
+  function setupUploadArea() {
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('drag-over');
+    });
+
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.classList.remove('drag-over');
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('drag-over');
+      const files = e.dataTransfer.files;
+      if (files.length) {
+        handleFileSelect(files[0]);
+      }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length) {
+        handleFileSelect(e.target.files[0]);
+      }
+    });
+
+    changeImageButton.addEventListener('click', () => {
+      resetUI(); 
+      // If we reset from upload, show upload view again
+      if (processingState.currentMode === 'upload') {
+         initialChoice.classList.add('hidden');
+         uploadView.classList.remove('hidden');
+         actionButtons.classList.remove('hidden');
+      }
+    });
+  }
+
+  function handleFileSelect(file) {
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        uploadedImage.src = e.target.result;
+        uploadArea.classList.add('hidden');
+        uploadPreview.classList.remove('hidden');
+        processUploadButton.classList.remove('hidden');
+        captureAgainButton.classList.remove('hidden'); // Use this as the 'change' button
+        statusMessage.textContent = 'Image ready to process.';
+      }
+      reader.readAsDataURL(file);
+    } else {
+      statusMessage.textContent = 'Please select a valid image file.';
+      alert('Invalid file type. Please select an image.');
+    }
+  }
+
+  processUploadButton.addEventListener('click', () => {
+      processImage(uploadedImage);
+      processUploadButton.classList.add('hidden');
+      changeImageButton.classList.add('hidden'); // Hide change button during processing
+  });
+  
+  // --- Common Functions --- 
+
+  // Process the captured or uploaded image
+  function processImage(imageSource) {
+    // Reset any previous haiku/image data
+    resetContentArea();
+    
+    // Show haiku loading indicator
+    haikuLoading.classList.add('active');
+    statusMessage.textContent = 'Processing your image...';
+    
+    if (imageSource instanceof HTMLCanvasElement) {
+      // For camera capture, use the canvas blob
+      imageSource.toBlob(async blob => {
+        await sendImageToServer(blob);
+      });
+    } else if (imageSource instanceof HTMLImageElement) {
+      // For uploaded image, fetch its blob data
+      fetch(imageSource.src)
+        .then(res => res.blob())
+        .then(async blob => {
+          await sendImageToServer(blob);
+        })
+        .catch(err => {
+          console.error('Error processing uploaded image:', err);
+          haikuLoading.classList.remove('active');
+          statusMessage.textContent = 'Error processing image. Please try again.';
+        });
+    }
+  }
+
+  // Send image to server
+  async function sendImageToServer(blob) {
+    const form = new FormData();
+    form.append('snapshot', blob, 'snapshot.jpg');
+    
+    try {
+      // Send the image to get a haiku
+      const res = await fetch('/upload', { method: 'POST', body: form });
+      const data = await res.json();
+      
+      if (data.success) {
+        // IMMEDIATELY display the haiku as soon as we have it
+        haikuLoading.classList.remove('active');
+        haikuPre.textContent = data.haiku;
+        haikuPre.classList.add('visible');
+        processingState.haikuReady = true;
+        
+        // Store the task ID for the image generation
+        processingState.currentTaskId = data.taskId;
+        
+        // Show image loading spinner and container
+        imageLoading.classList.add('active');
+        imageContainer.classList.add('visible');
+        statusMessage.textContent = 'Your haiku is ready! Generating visualization...';
+        processingState.imageGenerating = true;
+        
+        // Start polling for image status
+        startPollingImageStatus(data.taskId);
+      } else {
+         throw new Error(data.error || 'Failed to generate haiku');
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      haikuLoading.classList.remove('active');
+      haikuPre.textContent = 'Error generating haiku';
+      haikuPre.classList.add('visible');
+      statusMessage.textContent = `Something went wrong: ${err.message}. Please try again.`;
+    }
+  }
+
+  // Start polling for image status
+  function startPollingImageStatus(taskId) {
+    // Clear any existing interval
+    if (imageStatusInterval) {
+      clearInterval(imageStatusInterval);
+    }
+    
+    // Poll every 2 seconds
+    imageStatusInterval = setInterval(async () => {
+      try {
+        const res = await fetch(`/image-status/${taskId}`);
+        const data = await res.json();
+        
+        if (data.success && data.status === 'completed') {
+          // Image is ready, display it
+          displayGeneratedImage(data.aiImagePath);
+          // Stop polling
+          clearInterval(imageStatusInterval);
+          imageStatusInterval = null;
+        } else if (data.status === 'failed') {
+           throw new Error(data.error || 'Image generation failed');
+        }
+      } catch (err) {
+        console.error('Error checking image status:', err);
+        imageLoading.classList.remove('active');
+        statusMessage.textContent = `Error getting visualization: ${err.message}`; 
+        // Stop polling on error
+        clearInterval(imageStatusInterval);
+        imageStatusInterval = null;
+      }
+    }, 2000);
+  }
+
+  // Display the generated image when it's ready
+  function displayGeneratedImage(imagePath) {
+    // When image is ready to display
+    aiImage.onload = () => {
+      imageLoading.classList.remove('active');
+      aiImage.classList.remove('hidden');
+      processingState.imageReady = true;
+      statusMessage.textContent = 'Your haiku snapshot is complete!';
+    };
+    aiImage.onerror = () => {
+       imageLoading.classList.remove('active');
+       statusMessage.textContent = 'Error loading generated image.';
+    }
+    
+    // Set the image source to load it
+    aiImage.src = imagePath;
+  }
+
+  // Reset the haiku and image content areas only
+  function resetContentArea() {
+    // Reset only the content-related state
+    processingState.haikuReady = false;
+    processingState.imageGenerating = false;
+    processingState.imageReady = false;
+    processingState.currentTaskId = null;
+    
+    // Clear any existing polling
+    if (imageStatusInterval) {
+      clearInterval(imageStatusInterval);
+      imageStatusInterval = null;
+    }
+    
+    // Reset content UI elements
+    haikuPre.textContent = '';
+    haikuPre.classList.remove('visible');
+    haikuLoading.classList.remove('active');
+    
+    aiImage.classList.add('hidden');
+    aiImage.src = ''; // Clear image source
+    imageContainer.classList.add('visible'); // Keep container visible but empty
+    imageLoading.classList.remove('active');
+  }
+
+  // Reset the entire UI to initial state or chosen mode
+  function resetUI() {
+    stopCamera();
+    resetContentArea();
+    
+    // Hide everything except the initial choice if no mode selected yet
+    cameraView.classList.add('hidden');
+    uploadView.classList.add('hidden');
+    actionButtons.classList.add('hidden');
+    snapButton.classList.add('hidden');
+    processUploadButton.classList.add('hidden');
+    captureAgainButton.classList.add('hidden');
+    photoPreview.classList.add('hidden');
+    uploadPreview.classList.add('hidden');
+    uploadArea.classList.remove('hidden'); // Show upload area if resetting upload view
+
+    statusMessage.textContent = '';
+
+    // If a mode was previously chosen, go back to that mode's view
+    if (processingState.currentMode === 'camera') {
+      initialChoice.classList.add('hidden');
+      cameraView.classList.remove('hidden');
+      actionButtons.classList.remove('hidden');
+      snapButton.classList.remove('hidden');
+    } else if (processingState.currentMode === 'upload') {
+      initialChoice.classList.add('hidden');
+      uploadView.classList.remove('hidden');
+      actionButtons.classList.remove('hidden');
+      // Don't show process button until file selected
+    } else {
+      // If no mode set, go back to initial choice
+      initialChoice.classList.remove('hidden');
+    }
+  }
+
+  // Initial state setup - Do not start camera automatically
+  // initCamera(); // REMOVED - Camera starts only on button click
+  // setupUploadArea(); // Setup upload listeners regardless
+  resetUI(); // Start in the initial choice state
+
+});

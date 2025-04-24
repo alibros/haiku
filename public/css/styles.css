@@ -878,3 +878,41 @@ footer {
     font-size: 1rem;
   }
 }
+
+/* Styles for initial choice */
+.initial-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 0;
+  width: 100%;
+}
+
+.initial-choice p {
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.choice-buttons {
+  display: flex;
+  flex-direction: column; /* Stack buttons vertically on small screens */
+  gap: 1rem;
+  width: 100%;
+  max-width: 300px; /* Limit width of buttons */
+}
+
+.choice-button {
+  width: 100%; /* Make buttons take full width */
+  justify-content: center; /* Center content */
+  margin-top: 0; /* Reset margin */
+}
+
+/* Responsive adjustments */
+@media (min-width: 768px) {
+  /* ... existing media queries ... */
+  .choice-buttons {
+      flex-direction: row; /* Side-by-side on larger screens */
+      max-width: 450px;
+  }
+}
