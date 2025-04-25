@@ -151,6 +151,18 @@
     line-height: 1; 
 }
 
+/* Visibility for Play/Pause icons */
+.play-icon.hidden,
+.pause-icon.hidden {
+    display: none;
+}
+
+/* Visibility for Mute/Speaker icons */
+.mute-icon.hidden,
+.speaker-icon.hidden {
+    display: none;
+}
+
 .exit-button {
     background: rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(4px); /* Slightly reduce blur */

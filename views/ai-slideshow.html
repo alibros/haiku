@@ -23,6 +23,9 @@
       <div class="haiku-text"></div>
     </div>
     
+    <!-- Add Audio Element -->
+    <audio id="background-music" src="/bg-music.mp3" preload="auto"></audio>
+    
     <!-- Controls -->
     <div class="slideshow-controls">
       <button id="prev-button" class="control-button">
@@ -34,6 +37,11 @@
       </button>
       <button id="next-button" class="control-button">
         <span class="control-icon">&#10095;</span>
+      </button>
+      <!-- Add Mute Button -->
+      <button id="mute-button" class="control-button">
+        <span class="control-icon speaker-icon">🔊</span> 
+        <span class="control-icon mute-icon hidden">🔇</span>
       </button>
       <a href="/" class="exit-button">✕</a>
     </div>

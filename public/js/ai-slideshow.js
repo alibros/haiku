@@ -8,11 +8,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const prevButton = document.getElementById('prev-button');
   const nextButton = document.getElementById('next-button');
   const pauseButton = document.getElementById('pause-button');
-  const pauseIcon = document.querySelector('.pause-icon');
-  const playIcon = document.querySelector('.play-icon');
+  const pauseIcon = pauseButton.querySelector('.pause-icon'); // More specific selector
+  const playIcon = pauseButton.querySelector('.play-icon'); // More specific selector
   const loadingIndicator = document.getElementById('slideshow-loading');
   const noContentMessage = document.getElementById('no-content');
   
+  // Audio elements
+  const bgMusic = document.getElementById('background-music');
+  const muteButton = document.getElementById('mute-button');
+  const speakerIcon = muteButton.querySelector('.speaker-icon'); // More specific selector
+  const muteIcon = muteButton.querySelector('.mute-icon'); // More specific selector
+
   // Slideshow state
   let haikus = [];
   let currentIndex = 0;
@@ -22,16 +28,116 @@ document.addEventListener('DOMContentLoaded', () => {
   const slideDuration = 15000; // 15 seconds per slide
   const fadeOutDelay = 2000; // Time before fadeout starts (2 seconds before next slide)
   
+  // Audio state
+  let isMuted = false;
+  const crossfadeTime = 1.5; // seconds for crossfade duration
+  let isFading = false; // Flag to prevent multiple fade triggers
+  const targetVolume = 0.6; // Target volume (0 to 1)
+  
   /**
-   * Initialize the slideshow
+   * Initialize the slideshow and audio
    */
   function init() {
     // Show loading indicator
     showLoading(true);
     showNoContent(false);
     
+    // Setup audio first
+    setupAudio();
+    
     // Fetch AI-generated haikus and images
     fetchAIHaikus();
+  }
+  
+  /**
+   * Setup Audio playback and controls
+   */
+  function setupAudio() {
+    bgMusic.volume = targetVolume; // Set initial volume
+    bgMusic.muted = isMuted;
+    updateMuteButton();
+
+    // Attempt to play audio - might be blocked by browser initially
+    const playPromise = bgMusic.play();
+    if (playPromise !== undefined) {
+      playPromise.then(_ => {
+        console.log("Background music started.");
+      }).catch(error => {
+        console.warn("Music autoplay blocked by browser:", error);
+        // Could add a click-to-play overlay here if needed
+      });
+    }
+
+    // Crossfade Loop Logic
+    bgMusic.addEventListener('timeupdate', handleMusicLoop);
+
+    // Mute Button Logic
+    muteButton.addEventListener('click', toggleMute);
+  }
+  
+  /**
+   * Handle smooth looping with crossfade
+   */
+  function handleMusicLoop() {
+    if (isFading || !bgMusic.duration) return; // Exit if already fading or duration not known
+
+    const timeLeft = bgMusic.duration - bgMusic.currentTime;
+
+    if (timeLeft <= crossfadeTime) {
+      isFading = true;
+      console.log("Initiating crossfade...");
+
+      // Fade out
+      let currentVol = bgMusic.volume;
+      const fadeOutInterval = setInterval(() => {
+        currentVol -= 0.05; // Adjust step for smoother/faster fade
+        if (currentVol <= 0) {
+          bgMusic.volume = 0;
+          clearInterval(fadeOutInterval);
+          
+          // Reset and Fade In
+          bgMusic.currentTime = 0;
+          bgMusic.play(); // Ensure playing
+          let fadeInVol = 0;
+          const fadeInInterval = setInterval(() => {
+            fadeInVol += 0.05; // Adjust step
+            if (fadeInVol >= targetVolume) {
+              bgMusic.volume = targetVolume;
+              clearInterval(fadeInInterval);
+              isFading = false; // Reset flag
+              console.log("Crossfade complete.");
+            } else {
+              bgMusic.volume = fadeInVol;
+            }
+          }, (crossfadeTime * 1000) / (2 * (targetVolume / 0.05))); // Calculate interval time
+
+        } else {
+          bgMusic.volume = currentVol;
+        }
+      }, (crossfadeTime * 1000) / (2 * (currentVol / 0.05))); // Calculate interval time
+    }
+  }
+  
+  /**
+   * Toggle Mute State
+   */
+  function toggleMute() {
+    isMuted = !isMuted;
+    bgMusic.muted = isMuted;
+    updateMuteButton();
+  }
+  
+  /**
+   * Update Mute Button Icon
+   */
+  function updateMuteButton() {
+    if (isMuted) {
+      speakerIcon.classList.add('hidden');
+      muteIcon.classList.remove('hidden');
+    } else {
+      speakerIcon.classList.remove('hidden');
+      muteIcon.classList.add('hidden');
+    }
   }
   
   /**
