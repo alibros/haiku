@@ -9,9 +9,41 @@ const { OpenAI } = require('openai');
 const sqlite3 = require('sqlite3').verbose();
 
 const app = express();
-const db = new sqlite3.Database('./data/db.sqlite');
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-console.log(process.env.OPENAI_API_KEY);
+
+// Define the absolute path for the data directory and DB file
+const dataDir = path.resolve(__dirname, 'data'); // Relative to server.js
+const dbPath = path.join(dataDir, 'db.sqlite');
+
+// Ensure the data directory exists (optional here if init-db runs first, but safe)
+try {
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+    console.log(`Created data directory: ${dataDir}`);
+  }
+} catch (err) {
+  console.error('Error creating data directory:', err);
+  // Don't necessarily exit here, maybe the DB open will fail gracefully
+}
+
+// Use the absolute path to open the database
+const db = new sqlite3.Database(dbPath, (err) => {
+  if (err) {
+    console.error(`Error opening database at ${dbPath}:`, err.message);
+    // Handle error appropriately, e.g., don't start server or exit
+    process.exit(1);
+  }
+  console.log(`Connected to database at ${dbPath}`);
+});
+
+// Ensure API key is loaded before initializing OpenAI client
+const apiKey = process.env.OPENAI_API_KEY;
+if (!apiKey) {
+    console.error("Error: OPENAI_API_KEY not found in environment variables.");
+    process.exit(1); // Exit if API key is missing
+}
+const openai = new OpenAI({ apiKey: apiKey });
+console.log('OpenAI Client Initialized'); // Confirmation log
+
 // Map to store pending image generation tasks
 const pendingTasks = new Map();
 
