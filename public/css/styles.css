@@ -510,6 +510,8 @@ header {
   height: 0;
   overflow: hidden;
   transition: opacity 0.3s ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .loading-indicator.active {
@@ -531,6 +533,7 @@ header {
   border-radius: 50%;
   border-top-color: var(--accent);
   animation: spin 1s ease-in-out infinite;
+  flex-shrink: 0;
 }
 
 @keyframes spin {

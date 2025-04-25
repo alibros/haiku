@@ -1,3 +1,5 @@
+require('dotenv').config({ path: '.env.local' }); // Load .env.local
+
 const express = require('express');
 const multer  = require('multer');
 const path = require('path');
@@ -9,7 +11,7 @@ const sqlite3 = require('sqlite3').verbose();
 const app = express();
 const db = new sqlite3.Database('./data/db.sqlite');
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
+console.log(process.env.OPENAI_API_KEY);
 // Map to store pending image generation tasks
 const pendingTasks = new Map();
 
