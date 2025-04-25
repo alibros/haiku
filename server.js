@@ -88,7 +88,7 @@ app.post("/upload", upload.single("snapshot"), async (req, res) => {
       });
   
       const haiku = response.output_text.trim();
-      const imageBasePrompt = "create a beautiful and poetic abstract image based on this haiku, do not include any text in the image. Haiku: " + haiku;
+      const imageBasePrompt = "create a beautiful and poetic abstract image based on this haiku, do not include any text in the image.Haiku: " + haiku;
       
       // Generate a unique ID for this task
       const taskId = Date.now().toString();
