@@ -34,6 +34,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let isFading = false; // Flag to prevent multiple fade triggers
   const targetVolume = 0.6; // Target volume (0 to 1)
   
+  let audioStarted = false; // Flag to track if audio has been started by interaction
+  
   /**
    * Initialize the slideshow and audio
    */
@@ -53,20 +55,13 @@ document.addEventListener('DOMContentLoaded', () => {
    * Setup Audio playback and controls
    */
   function setupAudio() {
-    bgMusic.volume = targetVolume; // Set initial volume
+    bgMusic.volume = targetVolume; 
     bgMusic.muted = isMuted;
     updateMuteButton();
-
-    // Attempt to play audio - might be blocked by browser initially
-    const playPromise = bgMusic.play();
-    if (playPromise !== undefined) {
-      playPromise.then(_ => {
-        console.log("Background music started.");
-      }).catch(error => {
-        console.warn("Music autoplay blocked by browser:", error);
-        // Could add a click-to-play overlay here if needed
-      });
-    }
+    
+    // Add listener to start music on first interaction
+    document.body.addEventListener('click', startMusicOnInteraction, { once: true });
+    document.body.addEventListener('keydown', startMusicOnInteraction, { once: true });
 
     // Crossfade Loop Logic
     bgMusic.addEventListener('timeupdate', handleMusicLoop);
@@ -451,6 +446,29 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       noContentMessage.classList.add('hidden');
     }
+  }
+  
+  /**
+   * Start music playback after first user interaction
+   */
+  function startMusicOnInteraction() {
+      if (audioStarted) return; // Don't run twice
+
+      console.log("User interaction detected, attempting to play music...");
+      const playPromise = bgMusic.play();
+      if (playPromise !== undefined) {
+          playPromise.then(_ => {
+              console.log("Background music started after interaction.");
+              audioStarted = true; // Set flag
+              // Optional: Remove listeners if they weren't already removed by {once: true}
+              // document.body.removeEventListener('click', startMusicOnInteraction);
+              // document.body.removeEventListener('keydown', startMusicOnInteraction);
+          }).catch(error => {
+              console.error("Error starting music after interaction:", error);
+          });
+      } else {
+          audioStarted = true; // Assume older browsers might just play
+      }
   }
   
   // Event listeners
