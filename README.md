@@ -1,16 +1,82 @@
 # Haiku Snapshot
 
-A web application that captures images from your webcam, generates a 5-7-5 haiku about each image using OpenAI's GPT-4 vision API, and stores both the image and haiku in a gallery. Built with Node.js, Express, SQLite, and vanilla JS.
-
----
+An interactive web application where users can capture or upload an image, receive an AI-generated haiku inspired by it, and see an AI-generated visual interpretation of the haiku.
 
 ## Features
-- 📸 **Capture Images:** Use your webcam to snap a photo directly from the browser.
-- 🧠 **AI-Powered Haiku:** Each snapshot is sent to OpenAI's API to generate a unique haiku describing the image.
-- 🖼️ **Gallery:** Browse a gallery of your latest 20 haiku-image pairs.
-- 💾 **Local Storage:** Images and haikus are stored in a local SQLite database.
 
----
+*   **Image Input:**
+    *   Use live camera feed via browser.
+    *   Upload an image file (drag & drop or browse).
+*   **AI Haiku Generation:** Submits the image to OpenAI (GPT-4) to generate a 5-7-5 haiku.
+*   **AI Image Generation:** Uses the generated haiku as a prompt for OpenAI (GPT-Image) to create an abstract visual representation.
+*   **Gallery View:** Browse through past creations, showing the original image, the generated haiku, and the AI-generated image.
+*   **AI Slideshow:** An immersive, full-screen view that automatically cycles through the AI-generated images and their haikus with background music.
+*   **Asynchronous Processing:** Haiku is returned quickly while AI image generation happens in the background; status polling updates the UI when the image is ready.
+*   **Responsive Design:** Adapts to different screen sizes.
+*   **Persistent Storage:** Uses SQLite to save generated posts.
+
+## Tech Stack
+
+*   **Backend:** Node.js, Express
+*   **Database:** SQLite
+*   **AI:** OpenAI API (GPT-4.1 for text, GPT-Image for images)
+*   **Frontend:** HTML, CSS, Vanilla JavaScript
+*   **File Uploads:** Multer
+*   **Environment Variables:** dotenv
+
+## Setup & Running Locally
+
+1.  **Prerequisites:**
+    *   Node.js (v18 or later recommended)
+    *   npm
+    *   An OpenAI API Key
+
+
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
+
+3.  **Configure Environment Variables:**
+    *   Create a file named `.env.local` in the project root.
+    *   Add your OpenAI API key to this file:
+        ```
+        OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        ```
+    *   *(Important: Ensure `.env.local` is added to your `.gitignore` file to avoid committing your key!)*
+
+4.  **Run the application:**
+    ```bash
+    npm start
+    ```
+    This command will first run the database initialization script (`scripts/init-db.js`) and then start the server (`server.js`). The application should be available at `http://localhost:3002` (or the port specified by `process.env.PORT`).
+
+## Deployment Notes
+
+*   **Environment Variables:** Ensure the `OPENAI_API_KEY` environment variable is set in your deployment platform (Vercel, Render, etc.).
+*   **Database Persistence:** The SQLite database (`data/db.sqlite`) requires persistent storage. On platforms like Render, you **must** configure a **Persistent Disk** and mount it (e.g., to `/var/data`). Update the `dbPath` variable in `server.js` and `scripts/init-db.js` to use the absolute mount path (e.g., `/var/data/db.sqlite`). Without persistent storage, the database will be lost on each deploy/restart.
+*   **Build Command:** Typically none needed unless you add a build step.
+*   **Start Command:** `npm start` (as configured in `package.json`).
+
+## File Structure
+
+```
+/
+|-- data/              # SQLite database file
+|-- node_modules/      # Dependencies
+|-- public/            # Static assets (CSS, JS, images)
+|   |-- css/
+|   |-- js/
+|   |-- images/        # Uploaded and AI-generated images
+|-- scripts/           # Database utility scripts (init, flush)
+|-- views/             # HTML pages
+|-- .env.local         # Local environment variables (GITIGNORED!)
+|-- .gitignore
+|-- package.json
+|-- package-lock.json
+|-- server.js          # Main Express server logic
+|-- README.md          # This file
+```
 
 ## Demo
 1. Go to the homepage (`/`).
@@ -18,82 +84,18 @@ A web application that captures images from your webcam, generates a 5-7-5 haiku
 3. Instantly receive an AI-generated haiku about your image.
 4. Visit `/gallery` to view the latest haiku-image posts.
 
----
-
-## Getting Started
-
-### Prerequisites
-- Node.js (v16+ recommended)
-- An OpenAI API key with vision model access
-
-### Installation
-1. **Clone the repo:**
-   ```sh
-   git clone <your-repo-url>
-   cd haiku
-   ```
-2. **Install dependencies:**
-   ```sh
-   npm install
-   ```
-3. **Set up environment variables:**
-   - Create a `.env.local` file at the root with:
-     ```env
-     OPENAI_API_KEY="sk-..."
-     ```
-4. **Initialize the database:**
-   ```sh
-   node scripts/init-db.js
-   ```
-5. **Run the server:**
-   ```sh
-   node server.js
-   ```
-6. **Visit:** [http://localhost:3002](http://localhost:3002)
-
----
-
-## Project Structure
-```
-haiku/
-├── data/              # SQLite DB file
-│   └── db.sqlite
-├── public/            # Static assets
-│   ├── css/styles.css
-│   ├── images/        # Uploaded images
-│   └── js/
-│       ├── camera.js  # Webcam & upload logic
-│       └── gallery.js # (Gallery logic placeholder)
-├── scripts/
-│   └── init-db.js     # DB initialization script
-├── views/
-│   ├── index.html     # Main UI
-│   └── gallery.html   # Gallery UI
-├── server.js          # Express server
-├── package.json
-└── README.md
-```
-
----
-
 ## API Endpoints
 - `GET /` — Main page (camera)
 - `POST /upload` — Upload image, receive haiku
 - `GET /gallery` — Gallery page
 - `GET /stream` — JSON: latest 20 haiku-image pairs
 
----
-
 ## Environment Variables
 - `OPENAI_API_KEY`: Your OpenAI API key (required)
 - `PORT`: (Optional) Port to run the server (default: 3002)
 
----
-
 ## License
 ISC
-
----
 
 ## Acknowledgments
 - [OpenAI GPT-4 Vision API](https://platform.openai.com/docs/guides/vision)
@@ -101,7 +103,5 @@ ISC
 - [Multer](https://github.com/expressjs/multer)
 - [SQLite](https://www.sqlite.org/index.html)
 
----
-
-## Author
-- Your Name Here
+## Woo!
+- Ali

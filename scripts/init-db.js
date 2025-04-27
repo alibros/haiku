@@ -14,14 +14,14 @@ try {
   }
 } catch (err) {
   console.error('Error creating data directory:', err);
-  process.exit(1); // Exit if directory can't be created
+  process.exit(1); 
 }
 
 // Use the absolute path to open the database
 const db = new sqlite.Database(dbPath, (err) => {
   if (err) {
     console.error(`Error opening database at ${dbPath}:`, err.message);
-    process.exit(1); // Exit if DB can't be opened
+    process.exit(1);
   }
   console.log(`Connected to database at ${dbPath}`);
 });
@@ -42,7 +42,8 @@ db.exec(`
     return;
   }
   // Check if ai_image_path column exists
-  db.all("PRAGMA table_info(posts)", (pragmaErr, rows) => { // Use db.all for PRAGMA table_info
+  // Use db.all for PRAGMA table_info (AI helped alot in this!)
+  db.all("PRAGMA table_info(posts)", (pragmaErr, rows) => { 
     if (pragmaErr) {
       console.error('Error checking table schema:', pragmaErr);
       db.close();
@@ -59,11 +60,11 @@ db.exec(`
         } else {
           console.log('Database schema updated successfully!');
         }
-        db.close(); // Close after ALTER
+        db.close(); 
       });
     } else {
       console.log('Database schema is up to date.');
-      db.close(); // Close if up to date
+      db.close(); 
     }
   });
 });

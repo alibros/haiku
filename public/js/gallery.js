@@ -2,15 +2,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   const gallery = document.getElementById('gallery');
   const galleryLoading = document.getElementById('gallery-loading');
   
-  // Show loading indicator
   galleryLoading.style.display = 'flex';
   
   try {
-    // Fetch gallery data
     const res = await fetch('/stream');
     const data = await res.json();
     
-    // Hide loading indicator
     galleryLoading.style.display = 'none';
     
     if (!data.success) throw new Error(data.error);
@@ -25,7 +22,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
     
-    // Render gallery items
     gallery.innerHTML = data.posts.map(post => `
       <div class="gallery-item">
         <div class="image-pair">
@@ -43,14 +39,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       </div>
     `).join('');
     
-    // Add fade-in animation to items
     animateItems();
     
   } catch (err) {
-    // Hide loading indicator
     galleryLoading.style.display = 'none';
-    
-    // Show error message
     gallery.innerHTML = `
       <div class="error-message">
         <p>Failed to load gallery: ${err.message}</p>
@@ -60,7 +52,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
-// Format date in a more readable way
+// Helper for formating teh date string nicely
 function formatDate(dateString) {
   const date = new Date(dateString);
   return new Intl.DateTimeFormat('en-US', { 
@@ -72,7 +64,7 @@ function formatDate(dateString) {
   }).format(date);
 }
 
-// Animate gallery items with a staggered entrance
+// Apply a staggered fade-in animation to gallery items
 function animateItems() {
   const items = document.querySelectorAll('.gallery-item');
   items.forEach((item, index) => {
@@ -80,7 +72,7 @@ function animateItems() {
       item.style.opacity = '0';
       item.style.transform = 'translateY(20px)';
       
-      // Trigger reflow
+      // Force reflow to ensure transition starts correctly
       void item.offsetWidth;
       
       item.style.transition = 'all 0.4s ease';

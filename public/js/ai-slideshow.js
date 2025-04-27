@@ -1,6 +1,7 @@
-// AI-Enhanced Slideshow functionality
+// Frontend JS for the Slideshow Page ai-slideshow.html
+
 document.addEventListener('DOMContentLoaded', () => {
-  // DOM elements
+  // UI components DOM refrences
   const slideshowContainer = document.querySelector('.slideshow-container');
   const backgroundContainer = document.getElementById('background-container');
   const haikuContainer = document.getElementById('haiku-container');
@@ -8,123 +9,113 @@ document.addEventListener('DOMContentLoaded', () => {
   const prevButton = document.getElementById('prev-button');
   const nextButton = document.getElementById('next-button');
   const pauseButton = document.getElementById('pause-button');
-  const pauseIcon = pauseButton.querySelector('.pause-icon'); // More specific selector
-  const playIcon = pauseButton.querySelector('.play-icon'); // More specific selector
+  const pauseIcon = pauseButton.querySelector('.pause-icon');
+  const playIcon = pauseButton.querySelector('.play-icon');
   const loadingIndicator = document.getElementById('slideshow-loading');
   const noContentMessage = document.getElementById('no-content');
   
   // Audio elements
   const bgMusic = document.getElementById('background-music');
   const muteButton = document.getElementById('mute-button');
-  const speakerIcon = muteButton.querySelector('.speaker-icon'); // More specific selector
-  const muteIcon = muteButton.querySelector('.mute-icon'); // More specific selector
+  const speakerIcon = muteButton.querySelector('.speaker-icon');
+  const muteIcon = muteButton.querySelector('.mute-icon');
 
-  // Slideshow state
+  // state management variables
   let haikus = [];
   let currentIndex = 0;
   let isPlaying = true;
   let slideInterval;
   let currentAnimation;
-  const slideDuration = 15000; // 15 seconds per slide
-  const fadeOutDelay = 2000; // Time before fadeout starts (2 seconds before next slide)
+
+  // Duration of each image (TODO: Create UI setting for this so can be set from the webpage direction)
+  const slideDuration = 15000;
+  const fadeOutDelay = 2000;
   
   // Audio state
   let isMuted = false;
-  const crossfadeTime = 1.5; // seconds for crossfade duration
-  let isFading = false; // Flag to prevent multiple fade triggers
-  const targetVolume = 0.6; // Target volume (0 to 1)
+  const crossfadeTime = 1.5;
+  // this is kind of a hack to prevent multiple fade triggers
+  let isFading = false; 
+  const targetVolume = 0.6;
   
-  let audioStarted = false; // Flag to track if audio has been started by interaction
+  //page needs to have an interaction for the audio to become available 
+  let audioStarted = false; 
   
-  /**
-   * Initialize the slideshow and audio
-   */
+  // ---------------------------------
+
+
+  //Initialize the slideshow and audio
   function init() {
-    // Show loading indicator
     showLoading(true);
     showNoContent(false);
-    
-    // Setup audio first
     setupAudio();
-    
-    // Fetch AI-generated haikus and images
     fetchAIHaikus();
   }
   
-  /**
-   * Setup Audio playback and controls
-   */
+
+   //Setup Audio playback and controls
   function setupAudio() {
     bgMusic.volume = targetVolume; 
     bgMusic.muted = isMuted;
     updateMuteButton();
     
-    // Add listener to start music on first interaction
+    // Add listener to start music on first interaction (keyboard or mouse)
     document.body.addEventListener('click', startMusicOnInteraction, { once: true });
+
     document.body.addEventListener('keydown', startMusicOnInteraction, { once: true });
-
-    // Crossfade Loop Logic
     bgMusic.addEventListener('timeupdate', handleMusicLoop);
-
-    // Mute Button Logic
     muteButton.addEventListener('click', toggleMute);
+
   }
   
-  /**
-   * Handle smooth looping with crossfade
-   */
-  function handleMusicLoop() {
-    if (isFading || !bgMusic.duration) return; // Exit if already fading or duration not known
 
+  function handleMusicLoop() {
+    if (isFading || !bgMusic.duration) return; 
     const timeLeft = bgMusic.duration - bgMusic.currentTime;
 
     if (timeLeft <= crossfadeTime) {
       isFading = true;
-      console.log("Initiating crossfade...");
+      //console.log("Initiating crossfade...");
 
       // Fade out
       let currentVol = bgMusic.volume;
       const fadeOutInterval = setInterval(() => {
-        currentVol -= 0.05; // Adjust step for smoother/faster fade
+        //slowly decrease volume
+        currentVol -= 0.05;
         if (currentVol <= 0) {
           bgMusic.volume = 0;
           clearInterval(fadeOutInterval);
           
-          // Reset and Fade In
           bgMusic.currentTime = 0;
-          bgMusic.play(); // Ensure playing
+          bgMusic.play(); 
           let fadeInVol = 0;
           const fadeInInterval = setInterval(() => {
-            fadeInVol += 0.05; // Adjust step
+            fadeInVol += 0.05; 
             if (fadeInVol >= targetVolume) {
               bgMusic.volume = targetVolume;
               clearInterval(fadeInInterval);
-              isFading = false; // Reset flag
-              console.log("Crossfade complete.");
+              isFading = false; 
+              //console.log("Crossfade complete.");
             } else {
               bgMusic.volume = fadeInVol;
             }
-          }, (crossfadeTime * 1000) / (2 * (targetVolume / 0.05))); // Calculate interval time
+          }, (crossfadeTime * 1000) / (2 * (targetVolume / 0.05)));
 
         } else {
           bgMusic.volume = currentVol;
         }
-      }, (crossfadeTime * 1000) / (2 * (currentVol / 0.05))); // Calculate interval time
+      }, (crossfadeTime * 1000) / (2 * (currentVol / 0.05))); 
     }
   }
   
-  /**
-   * Toggle Mute State
-   */
+
   function toggleMute() {
     isMuted = !isMuted;
     bgMusic.muted = isMuted;
     updateMuteButton();
   }
   
-  /**
-   * Update Mute Button Icon
-   */
+
   function updateMuteButton() {
     if (isMuted) {
       speakerIcon.classList.add('hidden');
@@ -134,14 +125,11 @@ document.addEventListener('DOMContentLoaded', () => {
       muteIcon.classList.add('hidden');
     }
   }
-  
-  /**
-   * Fetch AI-generated haikus and images from the server
-   */
+  //API call back to the server - see server.js for implementation
   async function fetchAIHaikus() {
     try {
       const response = await fetch('/api/ai-haikus');
-      console.log("API Response Status:", response.status);
+      //console.log("API Response Status:", response.status);
       if (!response.ok) {
         throw new Error(`Failed to fetch AI haikus (status: ${response.status})`);
       }
@@ -155,19 +143,18 @@ document.addEventListener('DOMContentLoaded', () => {
           text: haiku.text,
           imageUrl: haiku.imageUrl,
           prompt: haiku.prompt || '',
-          model: haiku.model || 'AI'
+          model: haiku.model || 'AI' //I don't really need this, only added it to test different models but ended up using 4.1 so TODO: take this field one
         }));
         console.log("Mapped haikus state:", haikus);
         
-        // Hide loading and start slideshow
         showLoading(false);
         
-        // Show first slide and start slideshow
+
+
         showSlide(0);
         startSlideshow();
       } else {
-        console.log("No haikus received or empty array.");
-        // No haikus available
+        //console.log("No haikus received or empty array.");
         showLoading(false);
         showNoContent(true);
       }
@@ -178,11 +165,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
   
-  /**
-   * Start the automatic slideshow
-   */
+
   function startSlideshow() {
-    stopSlideshow(); // Clear any existing interval
+    stopSlideshow();
     
     slideInterval = setInterval(() => {
       fadeOutWords(() => {
@@ -190,24 +175,17 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }, slideDuration);
   }
-  
-  /**
-   * Stop the automatic slideshow
-   */
+ 
   function stopSlideshow() {
     if (slideInterval) {
       clearInterval(slideInterval);
     }
     
-    // Also clear any running animations
     if (currentAnimation) {
       clearTimeout(currentAnimation);
     }
   }
   
-  /**
-   * Toggle play/pause
-   */
   function togglePlayPause() {
     isPlaying = !isPlaying;
     
@@ -222,9 +200,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
   
-  /**
-   * Go to next slide
-   */
+
+  //Slide controls 
   function nextSlide() {
     stopSlideshow();
     currentIndex = (currentIndex + 1) % haikus.length;
@@ -235,9 +212,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
   
-  /**
-   * Go to previous slide
-   */
   function prevSlide() {
     stopSlideshow();
     currentIndex = (currentIndex - 1 + haikus.length) % haikus.length;
@@ -248,9 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
   
-  /**
-   * Fade out all words before changing slide
-   */
+
   function fadeOutWords(callback) {
     const words = document.querySelectorAll('.haiku-word');
     
@@ -259,15 +231,12 @@ document.addEventListener('DOMContentLoaded', () => {
       word.classList.add('fade-out-word');
     });
     
-    // Wait for fadeout animation to complete, then call callback
+    // Wait for fadeout animation to complete, then call callback (there is definitely a better way?!)
     setTimeout(() => {
       if (callback) callback();
-    }, 1000); // 1 second fadeout
+    }, 1000);
   }
   
-  /**
-   * Display slide
-   */
   function showSlide(index) {
     console.log(`Showing slide index: ${index}`);
     if (!haikus[index]) {
@@ -282,7 +251,6 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error("Image URL is missing for this haiku:", haiku);
     }
     
-    // Update background image with enhanced crossfade effect
     const currentBg = backgroundContainer.querySelector('.slide-bg.current');
     const nextBg = backgroundContainer.querySelector('.slide-bg.next');
     
@@ -292,13 +260,12 @@ document.addEventListener('DOMContentLoaded', () => {
     currentBg.classList.add('fade-out');
     nextBg.classList.add('animate');
     
-    // --- Synchronization Point --- 
-    // Wait for the background image fade-in (1500ms) before updating text
+    // waiting for the background image fade-in before updating text
     const imageTransitionDuration = 1500; 
     
     setTimeout(() => {
       console.log("Completing background transition for index:", index);
-      // Update text *after* image transition starts
+      // Update text *only after* image transition starts (bit of a race condition and not very elegant)
       updateHaikuText(haiku.text);
       
       // Swap classes for background
@@ -310,70 +277,53 @@ document.addEventListener('DOMContentLoaded', () => {
       nextBg.classList.remove('next');
       nextBg.classList.add('current');
       
-      // Add image attribution slightly after text starts animating
       updateImageAttribution(haiku); 
       
     }, imageTransitionDuration);
     
-    // --- Removed text update from here --- 
-    // updateHaikuText(haiku.text); // Moved inside setTimeout
+
   }
   
-  /**
-   * Update image attribution
-   */
+// TO DO: remove as everything with same model now.
   function updateImageAttribution(haiku) {
-    // Remove any existing attribution
     const existingAttribution = document.querySelector('.image-attribution');
     if (existingAttribution) {
       existingAttribution.remove();
     }
     
-    // Create new attribution - Simplified
     const attribution = document.createElement('div');
     attribution.className = 'image-attribution';
-    // Only display the model name
     attribution.textContent = `Generated by ${haiku.model || 'AI'}`;
     
-    // Add to container
     slideshowContainer.appendChild(attribution);
     
-    // Fade in attribution
     setTimeout(() => {
-      // Make sure attribution exists before trying to style
       if (document.body.contains(attribution)) {
         attribution.style.opacity = '1'; 
       }
     }, 500);
   }
   
-  /**
-   * Update haiku text with enhanced animation
-   */
+
   function updateHaikuText(text) {
-    // Clear current text
     haikuText.innerHTML = '';
     
     // Split haiku into lines
     const lines = text.split('\n');
     let allWords = [];
     
-    // Process normal line structure
     lines.forEach(line => {
       const lineElement = document.createElement('div');
       lineElement.className = 'haiku-line';
       
       // Split line into words for animation
       const words = line.trim().split(' ');
-      
       words.forEach(word => {
         if (word.trim() !== '') {
           const wordElement = document.createElement('span');
-          // Assign class for styling, start invisible
           wordElement.className = 'haiku-word'; 
-          wordElement.textContent = word + ' '; // Add space back
+          wordElement.textContent = word + ' '; 
           lineElement.appendChild(wordElement);
-          // Collect all word elements for animation
           allWords.push(wordElement);
         }
       });
@@ -381,24 +331,20 @@ document.addEventListener('DOMContentLoaded', () => {
       haikuText.appendChild(lineElement);
     });
     
-    // Animate words sequentially
+    // Animate words with fade in
     animateWords(allWords);
   }
   
-  /**
-   * Animate words sequentially with enhanced timing
-   */
   function animateWords(words) {
-    if (words.length === 0) return;
-    
-    // Clear previous animation timeouts if any
+    if (words.length === 0) return;    
     if (currentAnimation) {
         clearTimeout(currentAnimation);
     }
 
     // Calculate time per word so all words appear within the first 70% of slide duration
+    // but maintain minimum delay 
     const animationDuration = slideDuration * 0.7;
-    const timePerWord = Math.max(100, Math.min(600, animationDuration / words.length)); // Ensure minimum delay
+    const timePerWord = Math.max(100, Math.min(600, animationDuration / words.length));
     
     let wordIndex = 0;
     
@@ -407,28 +353,20 @@ document.addEventListener('DOMContentLoaded', () => {
         // Add .visible class to trigger CSS transition
         words[wordIndex].classList.add('visible'); 
         wordIndex++;
-        
-        // Schedule the next word animation
         currentAnimation = setTimeout(animateNextWord, timePerWord);
       }
     }
     
-    // Start the animation sequence
-    // Add a small delay before starting to ensure DOM is ready
     setTimeout(animateNextWord, 100); 
-    
-    // Schedule fadeout for the words before the slide changes
-    // Note: fadeOutWords itself has a timeout for the animation
+    // Start fade-out 1s before the actual transition begins
     setTimeout(() => {
       if (isPlaying) {
           fadeOutWords(); 
       }
-    }, slideDuration - fadeOutDelay - 1000); // Start fade-out 1s before the actual transition begins
+    }, slideDuration - fadeOutDelay - 1000); 
   }
   
-  /**
-   * Show or hide the loading indicator
-   */
+
   function showLoading(show) {
     if (show) {
       loadingIndicator.classList.remove('hidden');
@@ -437,9 +375,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
   
-  /**
-   * Show or hide the no content message
-   */
+
   function showNoContent(show) {
     if (show) {
       noContentMessage.classList.remove('hidden');
@@ -448,26 +384,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
   
-  /**
-   * Start music playback after first user interaction
-   */
+
+
+
+
   function startMusicOnInteraction() {
-      if (audioStarted) return; // Don't run twice
+      if (audioStarted) return;
 
       console.log("User interaction detected, attempting to play music...");
       const playPromise = bgMusic.play();
       if (playPromise !== undefined) {
           playPromise.then(_ => {
               console.log("Background music started after interaction.");
-              audioStarted = true; // Set flag
-              // Optional: Remove listeners if they weren't already removed by {once: true}
-              // document.body.removeEventListener('click', startMusicOnInteraction);
-              // document.body.removeEventListener('keydown', startMusicOnInteraction);
+              audioStarted = true; 
+
           }).catch(error => {
-              console.error("Error starting music after interaction:", error);
+             // console.error("Error starting music after interaction:", error);
           });
       } else {
-          audioStarted = true; // Assume older browsers might just play
+          audioStarted = true; 
       }
   }
   

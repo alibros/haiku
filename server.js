@@ -1,4 +1,13 @@
-require('dotenv').config({ path: '.env.local' }); // Load .env.local
+// Haiku Station
+// Ali Akhavan
+// Goldsmitsh University
+// WICC2 2025
+
+
+// Load .env.local to for Open AI API Key
+// I'm including this in the project with my API key so you can test it.
+// There is a rate limit set on it and I will invalidate it later!
+require('dotenv').config({ path: '.env.local' }); 
 
 const express = require('express');
 const multer  = require('multer');
@@ -10,11 +19,11 @@ const sqlite3 = require('sqlite3').verbose();
 
 const app = express();
 
-// Define the absolute path for the data directory and DB file
-const dataDir = path.resolve(__dirname, 'data'); // Relative to server.js
+// Define the absolute path for the data directory and DB file relative to this file.
+const dataDir = path.resolve(__dirname, 'data'); 
 const dbPath = path.join(dataDir, 'db.sqlite');
 
-// Ensure the data directory exists (optional here if init-db runs first, but safe)
+// Ensure the data directory exists
 try {
   if (!fs.existsSync(dataDir)) {
     fs.mkdirSync(dataDir, { recursive: true });
@@ -22,14 +31,14 @@ try {
   }
 } catch (err) {
   console.error('Error creating data directory:', err);
-  // Don't necessarily exit here, maybe the DB open will fail gracefully
+  // TODO: Don't  exit here, it should gracefully initialise the DB first.
 }
 
 // Use the absolute path to open the database
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
     console.error(`Error opening database at ${dbPath}:`, err.message);
-    // Handle error appropriately, e.g., don't start server or exit
+    // TODO: Handle error appropriately
     process.exit(1);
   }
   console.log(`Connected to database at ${dbPath}`);
@@ -39,19 +48,22 @@ const db = new sqlite3.Database(dbPath, (err) => {
 const apiKey = process.env.OPENAI_API_KEY;
 if (!apiKey) {
     console.error("Error: OPENAI_API_KEY not found in environment variables.");
-    process.exit(1); // Exit if API key is missing
+    process.exit(1); // Exit if API key is missing (TODO: UI feedback )
 }
 const openai = new OpenAI({ apiKey: apiKey });
-console.log('OpenAI Client Initialized'); // Confirmation log
+console.log('OpenAI Client Initialized'); 
 
 // Map to store pending image generation tasks
+// This is so the haiku can be displayed on the UI while the image generation is in process
+// As the image generation API call does take quite a while to come back.
 const pendingTasks = new Map();
 
-// Static files
+// Serve static files
 app.use(express.static('public'));
 app.use('/views', express.static('views'));
 
-// Multer config
+// Multer config for image uploads
+// Using current time stamp as unique file names.
 const storage = multer.diskStorage({
   destination: 'public/images',
   filename: (_, file, cb) => cb(null, `${Date.now()}${path.extname(file.originalname)}`)
@@ -59,21 +71,21 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 
-
 // Serve pages
 app.get('/', (_, res) => res.sendFile(path.resolve('views/index.html')));
 app.get('/gallery', (_, res) => res.sendFile(path.resolve('views/gallery.html')));
 app.get('/ai-slideshow', (_, res) => res.sendFile(path.resolve('views/ai-slideshow.html')));
 
-// Upload & haiku generation - now returns haiku immediately
+// Upload & haiku generation -  TODO: These can be probably separated into 2 places for better error handling.
 app.post("/upload", upload.single("snapshot"), async (req, res) => {
     try {
-      // 1. Read & encode image
+      // Read & encode image
       const filename = req.file.filename;
       const imagePath = path.resolve("public/images", filename);
+      //OpenAI responese API needs the image data as base64
       const base64Image = fs.readFileSync(imagePath, "base64");
   
-      // 2. Send to OpenAI as mixed input for haiku generation
+      //Send to OpenAI as mixed input for haiku generation
       const response = await openai.responses.create({
         model: "gpt-4.1-mini",
         input: [
@@ -88,6 +100,8 @@ app.post("/upload", upload.single("snapshot"), async (req, res) => {
       });
   
       const haiku = response.output_text.trim();
+      // This prompt cant be modified to dictate the look and feel of the generate images.
+      // I played with a bunch of different styles and landed on this prompt. 
       const imageBasePrompt = "create a beautiful and poetic abstract image based on this haiku, do not include any text in the image.Haiku: " + haiku;
       
       // Generate a unique ID for this task
@@ -104,7 +118,7 @@ app.post("/upload", upload.single("snapshot"), async (req, res) => {
       // Start image generation in the background without waiting for it to complete
       generateImage(taskId);
       
-      // 3. Return the haiku and task ID immediately
+      // Return the haiku and task ID immediately
       res.json({ 
         success: true, 
         haiku, 
