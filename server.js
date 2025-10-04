@@ -4,9 +4,9 @@
 // WICC2 2025
 
 
-// Load .env.local to for Open AI API Key
-// I'm including this in the project with my API key so you can test it.
-// There is a rate limit set on it and I will invalidate it later!
+// Load .env.local to for Open AI API Key. This file needs to be created manually before running the app.
+// Details in readme.md
+// More than happy to provide you with my own API key for testing.
 require('dotenv').config({ path: '.env.local' }); 
 
 const express = require('express');
@@ -85,7 +85,7 @@ app.post("/upload", upload.single("snapshot"), async (req, res) => {
       //OpenAI responese API needs the image data as base64
       const base64Image = fs.readFileSync(imagePath, "base64");
   
-      //Send to OpenAI as mixed input for haiku generation
+      // Send to OpenAI as mixed input for haiku generation
       const response = await openai.responses.create({
         model: "gpt-4.1-mini",
         input: [
@@ -126,6 +126,7 @@ app.post("/upload", upload.single("snapshot"), async (req, res) => {
       });
     } catch (err) {
       console.error(err);
+      //TODO: Better error handling maybe?
       res.status(500).json({ success: false, error: err.message });
     }
 });
@@ -169,6 +170,7 @@ async function generateImage(taskId) {
       model: "gpt-image-1",
       prompt: task.imageBasePrompt,
       n: 1,
+      //this can be changed to high but reduces the image delivery speed signifiacntly.
       quality: "medium",
       size: "1024x1024"
     });

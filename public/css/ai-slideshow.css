@@ -1,4 +1,7 @@
-/* AI Slideshow specific styles */
+/* AI Slideshow specific styles 
+ * Pretty much all of the css in both files is AI generated based on my sketch and description
+ * I only had to tweak a few things to make it look like what I wanted.  
+ */
 .slide-bg {
     /* Ensure background properties are set */
     background-size: cover;
